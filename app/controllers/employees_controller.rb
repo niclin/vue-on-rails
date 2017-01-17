@@ -34,15 +34,9 @@ class EmployeesController < ApplicationController
   end
 
   def destroy
-    @employee = Employee.find(params[:id])
+    Employee.find(params[:id]).destroy
     respond_to do |format|
-      format.json do
-        if @employee.destroy
-          render :json => {}, :status => :no_content
-        else
-          render :json => { :errors => @employee.errors.messages }, :status => 422
-        end
-      end
+      format.json { render :json => {}, :status => :no_content }
     end
   end
 
