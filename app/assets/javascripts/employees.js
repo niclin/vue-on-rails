@@ -31,6 +31,19 @@ Vue.component('employee-row', {
           that.errors = res.responseJSON.errors
         }
       })
+    },
+    fireEmployee: function () {
+      var that = this;
+      $.ajax({
+        method: 'DELETE',
+        url: '/employees/' + that.employee.id + '.json',
+        success: function(res) {
+          employees.employees.$remove(that.employee)
+        },
+        error: function(res) {
+          that.errors = res.responseJSON.errors
+        }
+      })
     }
   }
 })
@@ -67,6 +80,7 @@ var employees = new Vue({
         url: '/employees.json',
         success: function(res) {
           that.errors = {}
+          that.employee = {}
           that.employees.push(res);
         },
         error: function(res) {
