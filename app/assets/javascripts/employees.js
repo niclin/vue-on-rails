@@ -1,3 +1,15 @@
+Vue.http.interceptors.push({
+  request: function (request) {
+    Vue.http.headers.common['X-CSRF-Token'] = $('[name="csrf-token"]').attr('content');
+    return request;
+  },
+  response: function (response) {
+    return response;
+  }
+});
+
+var employeeResource = Vue.resource('/employees{/id}.json')
+
 Vue.component('employee-row', {
   template: '#employee-row',
   props: {
@@ -16,34 +28,24 @@ Vue.component('employee-row', {
     },
     updateEmployee: function () {
       var that = this;
-      $.ajax({
-        method: 'PUT',
-        data: {
-          employee: that.employee,
-        },
-        url: '/employees/' + that.employee.id + '.json',
-        success: function(res) {
+      employeeResource.update({id: that.employee.id}, {employee: that.employee}).then(
+        function(response) {
           that.errors = {}
-          that.employee = res
+          that.employee = response.data
           that.editMode = false
         },
-        error: function(res) {
-          that.errors = res.responseJSON.errors
+        function(response) {
+          that.errors = response.data.errors
         }
-      })
+      )
     },
     fireEmployee: function () {
       var that = this;
-      $.ajax({
-        method: 'DELETE',
-        url: '/employees/' + that.employee.id + '.json',
-        success: function(res) {
-          employees.employees.$remove(that.employee)
-        },
-        error: function(res) {
-          that.errors = res.responseJSON.errors
+      employeeResource.delete({id: that.employee.id}).then(
+        function (response) {
+          that.$remove()
         }
-      })
+      )
     }
   }
 })
@@ -62,31 +64,25 @@ var employees = new Vue({
   ready: function() {
     var that;
     that = this;
-    $.ajax({
-      url: '/employees.json',
-      success: function(res) {
-        that.employees = res;
+    employeeResource.get().then(
+      function (response) {
+        that.employees = response.data
       }
-    });
+    )
   },
   methods: {
     hireEmployee: function () {
       var that = this;
-      $.ajax({
-        method: 'POST',
-        data: {
-          employee: that.employee,
+      employeeResource.save({employee: this.employee}).then(
+        function(response) {
+          that.errors = {};
+          that.employee = {};
+          that.employees.push(response.data);
         },
-        url: '/employees.json',
-        success: function(res) {
-          that.errors = {}
-          that.employee = {}
-          that.employees.push(res);
-        },
-        error: function(res) {
-          that.errors = res.responseJSON.errors
+        function(response) {
+          that.errors = response.data.errors
         }
-      })
+      )
     }
   }
 });
